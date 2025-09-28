@@ -71,7 +71,6 @@ cumsum(tosses=="heads") #cumulative sum
 
 round(prop.table(table(tosses=="heads")),3)
 
-
 #ggplot2
 ggplot(data.frame(tosses), aes(x=tosses, fill=tosses)) + geom_bar() #bare minimum
 ggplot(data.frame(tosses), aes(x=tosses, fill=tosses)) + geom_bar() + labs(title="Coin tosses -")
@@ -113,10 +112,38 @@ customers_df
 head(customers_df)
 head(customers_df, 10)
 
+customers_df$region
+
   # 2. Perform:
     # o Simple random sampling
+nrow(customers_df) # number of rows in a data.frame()
+1:nrow(customers_df) # sequence operator from 1 till the total number of rows
+sample(1:nrow(customers_df),50) # generates a vector of 50 random row numbers without replacement
+
+srs_idx <- sample(1:nrow(customers_df),50) #sample() picks without replacement by default
+#default is replacement=FALSE
+srs_smp <- customers_df[srs_idx, ]
+srs_smp
+class(srs_idx)
+typeof(srs_idx)
+class(srs_smp)
+typeof(srs_smp)
+
+#using dplyr
+library(dplyr)
+simple_sample <- customers_df %>% # feeds data.frame into first argument of next function
+  sample_n(size = 100)
+
+simple_sample
+table(simple_sample$region) #frequency distribution
+
+#using base R
+srs <- customers[sample(1:500, 100), ]
 
     # o Stratified sampling (by region)
+set.seed(42)
+split_by_region <- split(customers_df, customers_df$region)
+
 
     # o Systematic sampling (every 10th customer)
 
