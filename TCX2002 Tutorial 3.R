@@ -138,13 +138,196 @@ simple_sample
 table(simple_sample$region) #frequency distribution
 
 #using base R
-srs <- customers[sample(1:500, 100), ]
+srs <- customers[sample(1:500, 100), ] #default replace=FALSE
+table(srs$region)
+
+#alternative official solutions
+set.seed(42)
+customers <- data.frame(
+  customer_id=1:500,
+  region=sample(c("North","South","East","West"),size=500,replace=TRUE)
+)
+head(customers)
+table(customers)
+table(customers$region)
+
+library(dplyr)
+simple_sample <- customers %>%
+  sample_n(size = 100)
+
+simple_sample
+table(simple_sample$region)
+
+
+
 
     # o Stratified sampling (by region)
 set.seed(42)
-split_by_region <- split(customers_df, customers_df$region)
+split_by_region <- split(customers_df, customers_df$region) #creates a list of df
+split_by_region
+
+#base r way is too long and complicated, just use dplyr
+
+library(dplyr)
+
+strat_smp <- customers_df %>%
+  group_by(region) %>%
+  sample_n(25) %>%
+  ungroup() #not necessary here unless you wanna do further stuff on it
+
+table(strat_smp$region)
+strat_smp
+
+#alternative
+strat_smp <- customers_df %>%
+  group_by(region) %>%
+  sample_frac(0.20)
+  
+table(strat_smp$region)    
+
+#alternative and newer way to do it
+
+strat_smp <- customers_df %>%
+  group_by(region) %>%
+  slice_sample(prop=0.2) %>%
+  ungroup()
 
 
-    # o Systematic sampling (every 10th customer)
+table(strat_smp$region)
+
+# o Systematic sampling (every 10th customer)
+
+N <- nrow(customers_df)
+n <- 100
+k <- N/n
+k
+start <- sample(1:k, 1) #pick a random starting index
+sys_idx <- seq(start, N, by = k)
+sys_smp <- customers_df[sys_idx,]
+sys_smp
+
+
+
+###- Systematic sampling - (Dr Prakash slides)
+N <- nrow(customers)   # population size (500)
+n <- 100                # desired sample size
+k <- N / n             # interval (10 here)
+start <- sample(1:k, 1)  # random start between 1 and k
+sys_idx <- seq(start, N, by = k)
+
+systematic_sample <- customers[sys_idx, ]
+
+# show samples divided by region
+table(systematic_sample$Region)
+
 
   # 3. Compare the results: Are all regions equally represented in each technique?
+
+original_distribution <- table(customers_df$region)
+simple_distribution <- table(simple_sample$region)
+stratified_distribution <- table(strat_smp$region)
+systematic_distribution <- table(sys_smp$region)
+
+original_distribution
+simple_distribution
+stratified_distribution
+systematic_distribution
+
+comparison <- data.frame(
+  Original = original_distribution,
+  Simple = simple_distribution,
+  Stratified = stratified_distribution,
+  Systematic = systematic_distribution
+)
+
+comparison
+colnames(comparison) <- c("Region", "Original", "Region", "SimpleRandom", "Region", "Stratified", "Region", "Systematic")
+comparison
+print(comparison)
+
+
+# 3. Confidence Intervals and Interpretation
+# Scenario: A manager wants to know the average time to resolve customer complaints.
+
+# Lab Questions:
+#   1. Use a dataset with complaint resolution times. 
+# We use a distribution that is skewed to the right (more common in real data)
+
+set.seed(123) 
+complaint_times <- rgamma(100, shape = 2, scale = 5)
+
+complaint_times
+head(complaint_times)
+mean(complaint_times)
+sd(complaint_times)
+summary(complaint_times)
+
+plot(complaint_times)
+barplot(complaint_times)
+hist(complaint_times)
+pie(complaint_times)
+
+hist(complaint_times, main = "Complaint Resolution Times", xlab = "Time (hours)")
+hist(complaint_times, breaks = 30, main = "Complaint Resolution Times", xlab = "Time (hours)")
+
+
+# 2. Calculate the mean and standard deviation.
+
+mean_time <- mean(complaint_times)
+sd_time <- sd(complaint_times)
+cat("Mean resolution time:", round(mean_time, 2), "hours\n")
+cat("Standard deviation:", round(sd_time, 2), "hours\n")
+
+
+
+# 3. Compute a 95% confidence interval for average resolution time.
+mean_time
+sd_time
+n <- length(complaint_times)
+n
+
+std_error <- sd_time/sqrt(n)
+std_error
+conf_lvl <- 0.95
+alpha_sig_lvl <- 1 - alpha_sig_lvl
+qnorm(0.975)
+qnorm(0.95)
+z-value <- qnorm(1 - alpha_sig_lvl/2)
+margin_error <- z_value * std_error
+
+confidence_int_lower <- mean(complaint_times) - qnorm(0.975) * sd(complaint_times) / sqrt(length(complaint_times))
+confidence_int_lower
+
+confidence_ints <- mean(complaint_times) + c(-1,1) * qnorm(0.975) * sd(complaint_times) / sqrt(length(complaint_times))
+confidence_ints
+
+
+# Scenario: An e-commerce site tracks conversion rates. In 1,200 visitors:
+#   • 84 made purchases • Sample conversion rate: p̂= 84/1,200 = 7%
+# Lab Questions:
+#   1. Check if conditions are met for normal approximation 
+x <- 84
+n <- 1200
+p_hat <- x/n
+p_hat
+
+np <- n * p_hat
+nq <- n * (1-p_hat)
+normal_ok <- (np >= 10) && (nq >= 10)
+normal_ok
+
+# 2. Calculate standard error for the proportion
+std_err <- sqrt(p_hat * (1-p_hat) / n)
+
+# 3. Build 95% confidence interval for true conversion rate 
+z_value <- qnorm(0.975)
+intervals <- p_hat + c(-1,1) * z_value * std_err
+round(intervals,2)
+intervals
+
+
+# 4. How would you communicate this to the marketing team?
+
+# “Based on a sample of 1,200 visitors, 84 made a purchase, giving a 7% conversion rate.
+# Using statistical analysis, we are 95% confident that the true conversion rate is between 5% and 9%.
+# This means that if we repeated similar campaigns, the actual conversion rate is likely to fall in this range.”
