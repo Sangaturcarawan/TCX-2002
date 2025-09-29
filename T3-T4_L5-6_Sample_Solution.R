@@ -73,7 +73,7 @@ pacman::p_load(corrplot, modelr, tidyverse, gridExtra, relaimpo)
 
 # Basic scatter plot with base R
 p1 <- ggplot(df, aes(x = Marketing_Spend, y = Sales)) +
-  geom_point(color = "red") +
+  geom_point(color = "darkred") +
   ggtitle("Sales vs. Marketing Spend") +
   theme_minimal() +
   theme(
@@ -94,7 +94,6 @@ p2 <- ggplot(df, aes(x = Tourist_Arrivals, y = Sales)) +
   )
 
 p2
-
 
 # Combine the two plots side by side
 grid.arrange(p1, p2, ncol = 2)
